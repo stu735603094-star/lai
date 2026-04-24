@@ -3,35 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Thoát Nạn Phú Hòa - Bản Đầy Đủ</title>
+    <title>Thoát Nạn Phú Hòa - Toàn Cảnh</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f0f4f8; margin: 0; overflow: hidden; position: fixed; width: 100%; height: 100%; }
-        .header { background: #003366; color: white; padding: 8px; border-bottom: 2px solid #ff9800; }
-        .mission { background: #fff3cd; color: #856404; padding: 6px; margin: 2px auto; width: 96%; border-radius: 5px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ffeeba; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f0f4f8; margin: 0; overflow: hidden; position: fixed; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        .header { background: #003366; color: white; padding: 10px; border-bottom: 2px solid #ff9800; flex-shrink: 0; }
         
-        /* Khung nhìn bản đồ - Đảm bảo hiện toàn bộ ảnh */
+        /* Nhiệm vụ */
+        .mission { background: #fff3cd; color: #856404; padding: 8px; margin: 5px auto; width: 95%; border-radius: 5px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ffeeba; flex-shrink: 0; }
+
+        /* Khung chứa bản đồ: Cho phép cuộn khi phóng to */
         .zoom-viewport { 
+            flex-grow: 1;
             width: 98%; 
-            height: 65vh; /* Tăng độ cao khung nhìn */
-            margin: 5px auto; 
+            margin: 0 auto; 
             border: 2px solid #003366; 
             border-radius: 8px; 
-            overflow: auto; /* Cho phép kéo khi phóng to */
+            overflow: auto; 
             background: #ffffff; 
             position: relative;
+            display: flex;
+            justify-content: center;
         }
         
         .map-container { 
             position: relative; 
             transform-origin: top left; 
             transition: transform 0.1s ease-out;
-            width: 100%; /* Đảm bảo container rộng bằng ảnh */
+            /* Thiết lập ban đầu để ảnh không bị tràn */
+            display: inline-block;
         }
         
         .map-layers img { 
-            width: 100%; /* Căn bản đồ vừa khít chiều ngang */
-            height: auto; 
+            /* Ép ảnh hiển thị toàn bộ theo chiều ngang hoặc dọc của khung nhìn */
+            max-width: 100%; 
+            max-height: 70vh; 
             display: none; 
             -webkit-user-drag: none; 
             pointer-events: none; 
@@ -46,40 +52,34 @@
             height: 100%; 
             z-index: 10; 
             touch-action: none; 
-            cursor: crosshair; 
         }
 
-        .zoom-controls { background: white; padding: 8px; display: flex; align-items: center; justify-content: center; gap: 15px; font-size: 0.85rem; font-weight: bold; border-bottom: 1px solid #ddd; }
-        input[type=range] { width: 180px; cursor: pointer; }
+        /* Thanh trượt Zoom */
+        .zoom-controls { background: white; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.85rem; font-weight: bold; border-top: 1px solid #ddd; }
+        input[type=range] { width: 200px; cursor: pointer; }
 
-        .controls { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; padding: 8px; background: #e9ecef; }
-        button { padding: 8px 10px; border-radius: 8px; border: 1px solid #003366; font-weight: bold; background: white; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
+        .controls { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; padding: 10px; background: #e9ecef; flex-shrink: 0; }
+        button { padding: 8px 10px; border-radius: 6px; border: 1px solid #003366; font-weight: bold; background: white; font-size: 0.75rem; cursor: pointer; }
         button.active { background: #003366 !important; color: white !important; }
         
         .btn-check { background: #28a745 !important; color: white !important; border: none; }
         .btn-clear { background: #dc3545 !important; color: white !important; border: none; }
-        .btn-save { background: #007bff !important; color: white !important; border: none; }
         
-        #result-msg { margin: 5px auto; padding: 10px; border-radius: 8px; display: none; font-size: 0.9rem; font-weight: bold; width: 92%; }
+        #result-msg { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); z-index: 20; padding: 10px; border-radius: 8px; display: none; font-size: 0.85rem; font-weight: bold; width: 80%; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
         #photo-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        #photo-overlay img { max-width: 95%; max-height: 80%; border: 3px solid #ff9800; border-radius: 5px; }
-        .close-btn { margin-top: 15px; padding: 12px 30px; border-radius: 25px; border: none; font-weight: bold; background: #fff; color: #000; cursor: pointer; }
+        #photo-overlay img { max-width: 95%; max-height: 80%; border: 2px solid white; }
     </style>
 </head>
 <body>
 
 <div class="header"><h2>MÔ PHỎNG THOÁT NẠN PHÚ HÒA</h2></div>
 
-<div class="zoom-controls">
-    <span>➖</span>
-    <input type="range" id="zoomRange" min="1" max="4" step="0.1" value="1" oninput="updateZoom(this.value)">
-    <span>➕</span>
-</div>
+<div class="mission">Nhiệm vụ: Vẽ lộ trình từ khu vực nguy cơ đến nơi an toàn</div>
 
-<div class="zoom-viewport" id="viewport">
+<div class="zoom-viewport">
     <div class="map-container" id="mapContainer">
         <div class="map-layers">
             <img src="GTHONG.png" id="img-GTHONG" class="active">
@@ -92,6 +92,12 @@
     </div>
 </div>
 
+<div class="zoom-controls">
+    <span>Thu nhỏ</span>
+    <input type="range" id="zoomRange" min="1" max="5" step="0.2" value="1" oninput="updateZoom(this.value)">
+    <span>Phóng to</span>
+</div>
+
 <div class="controls">
     <button onclick="setLayer('GTHONG', this)" class="active">Giao thông</button>
     <button onclick="setLayer('MOHINHSODOCAO', this)">Địa hình</button>
@@ -100,147 +106,9 @@
     <button onclick="setLayer('CAP3', this)">Cấp 3</button>
     <button class="btn-clear" onclick="clearCanvas()">🧹 Xóa</button>
     <button class="btn-check" onclick="checkResult()">✅ KIỂM TRA</button>
-    <button class="btn-save" onclick="nopBai()">💾 NỘP</button>
+    <button onclick="nopBai()" style="background:#007bff; color:white; border:none;">💾 NỘP</button>
 </div>
 
 <div id="result-msg"></div>
 
 <div id="photo-overlay">
-    <p>📱 NHẤN GIỮ ẢNH ĐỂ LƯU KẾT QUẢ</p>
-    <img id="result-photo" src="">
-    <button class="close-btn" onclick="document.getElementById('photo-overlay').style.display='none'">QUAY LẠI</button>
-</div>
-
-<script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const mapContainer = document.getElementById('mapContainer');
-    let currentScale = 1;
-    let isDrawing = false;
-    let pathLength = 0;
-    let lastPos = null;
-    let inMountain = false;
-    let inSchool = false;
-
-    function resizeCanvas() {
-        const activeImg = document.querySelector('.map-layers img.active');
-        if (activeImg) {
-            canvas.width = activeImg.clientWidth;
-            canvas.height = activeImg.clientHeight;
-        }
-    }
-
-    window.onload = () => setTimeout(resizeCanvas, 500);
-    window.onresize = resizeCanvas;
-
-    function updateZoom(val) {
-        currentScale = val;
-        mapContainer.style.transform = `scale(${val})`;
-    }
-
-    function setLayer(id, btn) {
-        // Lưu nét vẽ cũ
-        const temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        
-        document.querySelectorAll('.map-layers img').forEach(img => img.classList.remove('active'));
-        document.getElementById('img-' + id).classList.add('active');
-        document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        setTimeout(() => {
-            resizeCanvas();
-            ctx.putImageData(temp, 0, 0); // Vẽ lại nét cũ lên lớp mới
-        }, 50);
-        document.getElementById('result-msg').style.display = 'none';
-    }
-
-    function getPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        return {
-            x: (clientX - rect.left) / currentScale,
-            y: (clientY - rect.top) / currentScale
-        };
-    }
-
-    function startDraw(e) {
-        isDrawing = true;
-        lastPos = getPos(e);
-        ctx.beginPath();
-        ctx.moveTo(lastPos.x, lastPos.y);
-    }
-
-    function draw(e) {
-        if (!isDrawing) return;
-        const pos = getPos(e);
-        ctx.lineWidth = 3 / currentScale;
-        ctx.strokeStyle = '#ff0000';
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-
-        pathLength += Math.sqrt(Math.pow(pos.x - lastPos.x, 2) + Math.pow(pos.y - lastPos.y, 2));
-        
-        // Kiểm tra vùng địa lý
-        const pX = pos.x / canvas.width;
-        const pY = pos.y / canvas.height;
-        if (pY < 0.35) inMountain = true; // Vùng núi phía trên
-        if (pX > 0.35 && pX < 0.55 && pY > 0.35 && pY < 0.6) inSchool = true; // Vùng trường
-
-        lastPos = pos;
-    }
-
-    function stopDraw() { isDrawing = false; }
-
-    canvas.addEventListener('mousedown', startDraw);
-    window.addEventListener('mousemove', draw);
-    window.addEventListener('mouseup', stopDraw);
-    canvas.addEventListener('touchstart', (e) => { startDraw(e); e.preventDefault(); }, {passive: false});
-    canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); }, {passive: false});
-    canvas.addEventListener('touchend', stopDraw);
-
-    function checkResult() {
-        const msg = document.getElementById('result-msg');
-        msg.style.display = "block";
-        
-        if (pathLength < 10) {
-            msg.innerHTML = "❓ Em chưa vẽ hoặc nét vẽ quá ngắn.";
-            msg.className = "fail";
-            return;
-        }
-
-        if (inMountain) {
-            msg.innerHTML = "✅ CHÍNH XÁC! Em đã xác định được khu vực cao an toàn ở phía Bắc.";
-            msg.className = "success";
-        } else if (inSchool && pathLength > 80) {
-            msg.innerHTML = "✅ TỐT! Em đã vẽ đúng lộ trình thoát nạn từ khu vực trường học.";
-            msg.className = "success";
-        } else if (inSchool && pathLength <= 80) {
-            msg.innerHTML = "❌ LỖI: Tại khu vực trường học, em phải vẽ ĐƯỜNG thoát nạn, không được chỉ khoanh vùng.";
-            msg.className = "fail";
-        } else {
-            msg.innerHTML = "❌ CHƯA ĐÚNG! Em cần vẽ đường dẫn tới các điểm cao hoặc khu vực an toàn.";
-            msg.className = "fail";
-        }
-    }
-
-    function clearCanvas() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        pathLength = 0; inMountain = false; inSchool = false;
-        document.getElementById('result-msg').style.display = 'none';
-    }
-
-    function nopBai() {
-        const originalScale = currentScale;
-        updateZoom(1); // Chụp ảnh toàn bộ bản đồ
-        html2canvas(mapContainer).then(cv => {
-            document.getElementById('result-photo').src = cv.toDataURL();
-            document.getElementById('photo-overlay').style.display = 'flex';
-            updateZoom(originalScale);
-        });
-    }
-</script>
-</body>
-</html>
